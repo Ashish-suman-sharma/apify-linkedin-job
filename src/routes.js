@@ -355,6 +355,7 @@ async function extractVisibleJobDetails(page) {
     };
 
     const pageText = document.body.textContent?.replace(/\s+/g, ' ').trim() || '';
+    const pageUrl = window.location.href;
     const knownLabels = [
       'Seniority level',
       'Employment type',
@@ -371,6 +372,7 @@ async function extractVisibleJobDetails(page) {
       'Company size',
       'Benefits',
     ];
+    
     const getByLabel = (labelCandidates) => {
       for (const label of labelCandidates) {
         const domValue = getDefinitionValue(label);
@@ -389,6 +391,7 @@ async function extractVisibleJobDetails(page) {
     };
 
     const description = text(selectors.description);
+    const descriptionHtml = document.querySelector(selectors.description[0])?.innerHTML || '';
     const skills = Array.from(document.querySelectorAll('[data-test-skill-pill], .job-details-skill-match-status-list__unmatched-skill, .job-details-skill-match-status-list__matched-skill'))
       .map((element) => element.textContent?.replace(/\s+/g, ' ').trim())
       .filter(Boolean);
@@ -396,33 +399,98 @@ async function extractVisibleJobDetails(page) {
     const companyLinkedinUrl = href(selectors.company);
     const recruiterProfile = href(selectors.recruiter);
 
+    // Extract tracking parameters from URL
+    const urlParams = new URL(pageUrl);
+    const trackingId = urlParams.searchParams.get('trackingId') || '';
+    const refId = urlParams.searchParams.get('refId') || '';
+
+    // Extract workplace types
+    const workplaceText = getByLabel(['Workplace type', 'Work type']);
+    const workplaceTypes = workplaceText ? [workplaceText] : [];
+    
+    // Determine if remote allowed
+    const isRemote = Boolean(pageText.toLowerCase().match(/\bremote\b/));
+    const isHybrid = Boolean(pageText.toLowerCase().match(/\bhybrid\b/));
+    const workRemoteAllowed = isRemote || isHybrid;
+
+    // Extract apply method
+    const hasEasyApply = Boolean(document.body.textContent?.toLowerCase().includes('easy apply'));
+    const applyMethod = hasEasyApply ? 'EasyApply' : 'ComplexOnsiteApply';
+
     return {
+      id: extractJobId(pageUrl),
+      jobId: extractJobId(pageUrl),
+      trackingId,
+      refId,
+      link: pageUrl,
+      jobUrl: pageUrl,
       jobTitle: text(selectors.title),
+      title: text(selectors.title),
       companyName: text(selectors.company),
       companyLinkedinUrl,
       companyWebsite: href(selectors.companyWebsite),
-      location: text(selectors.location),
-      workType: getByLabel(labels.workType),
-      employmentType: getByLabel(labels.employmentType),
-      experienceLevel: getByLabel(labels.experienceLevel),
-      salary: getByLabel(labels.salary),
-      jobDescription: description,
-      skills,
-      applicantCount: extractFirstMatch(pageText, /(\d+\+?\s+applicants?)/i),
-      industry: getByLabel(labels.industry),
-      companySize: getByLabel(labels.companySize),
-      companyFollowers: extractFirstMatch(pageText, /([\d,]+\+?\s+followers?)/i),
       companyLogo: image(selectors.companyLogo),
       companyDescription: extractSection(pageText, ['About the company', 'About us']),
-      recruiterName: text(selectors.recruiter),
-      recruiterProfile,
-      jobFunctions: splitList(getByLabel(labels.jobFunctions)),
+      companySize: getByLabel(labels.companySize),
+      companyFollowers: extractFirstMatch(pageText, /([\d,]+\+?\s+followers?)/i),
+      location: text(selectors.location),
+      country: extractCountry(text(selectors.location)),
+      postedDate: text(selectors.location),
+      workType: getByLabel(labels.workType),
+      workplaceTypes,
+      workRemoteAllowed,
+      employmentType: getByLabel(labels.employmentType),
+      experienceLevel: getByLabel(labels.experienceLevel),
       seniorityLevel: getByLabel(labels.seniorityLevel),
+      jobFunction: getByLabel(labels.jobFunctions),
+      jobFunctions: splitList(getByLabel(labels.jobFunctions)),
       jobCategory: getByLabel(labels.jobCategory),
+      industry: getByLabel(labels.industry),
+      applicantCount: extractFirstMatch(pageText, /(\d+\+?\s+applicants?)/i),
+      applicantsCount: extractFirstMatch(pageText, /(\d+)/i),
+      salary: getByLabel(labels.salary),
+      salaryInsights: {},
       benefits: splitList(getByLabel(labels.benefits)),
-      easyApply: Boolean(document.body.textContent?.toLowerCase().includes('easy apply')),
-      remote: Boolean(pageText.toLowerCase().match(/\bremote\b|\bhybrid\b/)),
+      easyApply: hasEasyApply,
+      applyMethod,
+      jobDescription: description,
+      descriptionText: description,
+      descriptionHtml,
+      skills,
+      remote: isRemote || isHybrid,
+      jobPosterName: text(selectors.recruiter),
+      recruiterName: text(selectors.recruiter),
+      jobPosterProfileUrl: recruiterProfile,
+      recruiterProfile,
+      standardizedTitle: text(selectors.title),
+      inputUrl: pageUrl,
     };
+
+    function extractJobId(url) {
+      const match = url.match(/(?:jobs\/view\/|currentJobId=|\/)(\d{6,})/);
+      return match?.[1] || '';
+    }
+
+    function extractCountry(location) {
+      const countries = {
+        'United States': 'US',
+        'India': 'IN',
+        'United Kingdom': 'GB',
+        'Canada': 'CA',
+        'Australia': 'AU',
+        'Germany': 'DE',
+        'France': 'FR',
+        'Singapore': 'SG',
+        'UAE': 'AE',
+      };
+      
+      for (const [country, code] of Object.entries(countries)) {
+        if (location.toLowerCase().includes(country.toLowerCase())) {
+          return code;
+        }
+      }
+      return '';
+    }
 
     function extractFirstMatch(value, regex) {
       const match = value.match(regex);
@@ -573,35 +641,63 @@ async function discoverInfiniteScrollUrl(page, state) {
 
 function normalizeJobItem(item) {
   const normalized = {
+    id: '',
     jobId: '',
+    trackingId: '',
+    refId: '',
+    link: '',
+    jobUrl: '',
     jobTitle: '',
+    title: '',
     companyName: '',
     companyLinkedinUrl: '',
     companyWebsite: '',
-    jobUrl: '',
-    location: '',
-    workType: '',
-    employmentType: '',
-    experienceLevel: '',
-    salary: '',
-    jobDescription: '',
-    skills: [],
-    postedDate: '',
-    applicantCount: '',
-    industry: '',
-    companySize: '',
-    companyFollowers: '',
     companyLogo: '',
     companyDescription: '',
-    recruiterName: '',
-    recruiterProfile: '',
-    jobFunctions: [],
+    companySlogan: '',
+    companySize: '',
+    companyEmployeesCount: '',
+    companyFollowers: '',
+    location: '',
+    country: '',
+    companyAddress: {},
+    postedDate: '',
+    postedAt: '',
+    postedAtTimestamp: '',
+    expireAt: '',
+    workType: '',
+    workplaceTypes: [],
+    workRemoteAllowed: false,
+    employmentType: '',
     seniorityLevel: '',
+    experienceLevel: '',
+    jobFunction: '',
+    jobFunctions: [],
     jobCategory: '',
+    industry: '',
+    industries: '',
+    applicantCount: '',
+    applicantsCount: '',
+    salary: '',
+    salaryInsights: {},
     benefits: [],
     easyApply: false,
+    applyMethod: 'OnlineApply',
+    jobDescription: '',
+    descriptionText: '',
+    descriptionHtml: '',
+    skills: [],
     remote: false,
+    jobPosterName: '',
+    recruiterName: '',
+    jobPosterTitle: '',
+    recruiterProfile: '',
+    jobPosterProfileUrl: '',
+    jobPosterPhoto: '',
+    inputUrl: '',
+    standardizedTitle: '',
     scrapedAt: '',
+    trackingId: '',
   };
 
   return { ...normalized, ...removeUndefined(item) };
