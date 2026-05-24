@@ -6,9 +6,9 @@ export const DEFAULT_INPUT = {
   maxResults: 100,
   cookies: [],
   proxyEnabled: true,
-  retryCount: 3,
-  requestDelayMin: 0.3,
-  requestDelayMax: 0.8,
+  retryCount: 1,
+  requestDelayMin: 0.05,
+  requestDelayMax: 0.15,
   headless: true,
 };
 
@@ -186,10 +186,10 @@ export function createRouter({ input, stats, state, requestQueue }) {
 }
 
 async function waitForPageReady(page) {
-  await page.waitForLoadState('domcontentloaded', { timeout: 60000 });
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
   await Promise.race([
-    waitForAnySelector(page, SELECTORS.jobCards, 15000),
-    page.waitForTimeout(3000),
+    waitForAnySelector(page, SELECTORS.jobCards, 8000),
+    page.waitForTimeout(2000),
   ]);
 }
 
@@ -223,16 +223,13 @@ async function detectBlocking(page, session) {
 
 async function humanLikeScroll(page) {
   const viewportHeight = page.viewportSize()?.height || 900;
-  const scrolls = randomInt(2, 4);
+  const scrolls = randomInt(1, 2);
 
   for (let index = 0; index < scrolls; index += 1) {
     const distance = randomInt(Math.floor(viewportHeight * 0.35), Math.floor(viewportHeight * 0.85));
     await page.mouse.wheel(0, distance);
-    await page.waitForTimeout(randomInt(150, 400));
+    await page.waitForTimeout(randomInt(50, 150));
   }
-
-  await page.mouse.wheel(0, -randomInt(100, 300));
-  await page.waitForTimeout(randomInt(150, 400));
 }
 
 async function extractListingLinks(page) {
@@ -304,14 +301,14 @@ async function scrapeJobDetailsFromCurrentPageOrPopup(page, listing) {
       'Accept-Language': 'en-US,en;q=0.9',
       DNT: '1',
     });
-    await detailPage.goto(listing.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await detailPage.goto(listing.url, { waitUntil: 'domcontentloaded', timeout: 25000 });
     await detectBlocking(detailPage);
     await Promise.race([
-      waitForAnySelector(detailPage, SELECTORS.description, 12000),
-      detailPage.waitForTimeout(5000),
+      waitForAnySelector(detailPage, SELECTORS.description, 6000),
+      detailPage.waitForTimeout(2000),
     ]);
     await humanLikeScroll(detailPage);
-    await detailPage.waitForTimeout(randomInt(200, 500));
+    await detailPage.waitForTimeout(randomInt(100, 300));
     return await extractVisibleJobDetails(detailPage);
   } catch (error) {
     log.warning('Failed to extract full job details from listing panel', {

@@ -59,15 +59,15 @@ const crawler = new PlaywrightCrawler({
   requestQueue,
   proxyConfiguration,
   maxRequestRetries: input.retryCount,
-  maxConcurrency: 6,
-  minConcurrency: 3,
+  maxConcurrency: 12,
+  minConcurrency: 1,
   useSessionPool: true,
   persistCookiesPerSession: true,
   sessionPoolOptions: {
-    maxPoolSize: 50,
+    maxPoolSize: 100,
     sessionOptions: {
-      maxUsageCount: 10,
-      maxErrorScore: 3,
+      maxUsageCount: 50,
+      maxErrorScore: 5,
     },
   },
   launchContext: {
@@ -78,13 +78,18 @@ const crawler = new PlaywrightCrawler({
         '--disable-blink-features=AutomationControlled',
         '--disable-dev-shm-usage',
         '--no-sandbox',
+        '--disable-gpu',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--single-process',
       ],
     },
   },
   preNavigationHooks: [
     async ({ page, session }, gotoOptions) => {
       gotoOptions.waitUntil = 'domcontentloaded';
-      gotoOptions.timeout = 60000;
+      gotoOptions.timeout = 30000;
 
       await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9',
