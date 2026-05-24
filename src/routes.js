@@ -7,8 +7,8 @@ export const DEFAULT_INPUT = {
   cookies: [],
   proxyEnabled: true,
   retryCount: 3,
-  requestDelayMin: 2,
-  requestDelayMax: 5,
+  requestDelayMin: 0.3,
+  requestDelayMax: 0.8,
   headless: true,
 };
 
@@ -168,7 +168,7 @@ export function createRouter({ input, stats, state, requestQueue }) {
         break;
       }
 
-      await randomDelay(0.4, 1.2);
+      await randomDelay(0.05, 0.15);
     }
 
     if (!state.maxResultsReached) {
@@ -188,8 +188,8 @@ export function createRouter({ input, stats, state, requestQueue }) {
 async function waitForPageReady(page) {
   await page.waitForLoadState('domcontentloaded', { timeout: 60000 });
   await Promise.race([
-    waitForAnySelector(page, SELECTORS.jobCards, 25000),
-    page.waitForTimeout(8000),
+    waitForAnySelector(page, SELECTORS.jobCards, 15000),
+    page.waitForTimeout(3000),
   ]);
 }
 
@@ -223,16 +223,16 @@ async function detectBlocking(page, session) {
 
 async function humanLikeScroll(page) {
   const viewportHeight = page.viewportSize()?.height || 900;
-  const scrolls = randomInt(3, 7);
+  const scrolls = randomInt(2, 4);
 
   for (let index = 0; index < scrolls; index += 1) {
     const distance = randomInt(Math.floor(viewportHeight * 0.35), Math.floor(viewportHeight * 0.85));
     await page.mouse.wheel(0, distance);
-    await page.waitForTimeout(randomInt(350, 1400));
+    await page.waitForTimeout(randomInt(150, 400));
   }
 
-  await page.mouse.wheel(0, -randomInt(100, 500));
-  await page.waitForTimeout(randomInt(300, 1000));
+  await page.mouse.wheel(0, -randomInt(100, 300));
+  await page.waitForTimeout(randomInt(150, 400));
 }
 
 async function extractListingLinks(page) {
@@ -311,7 +311,7 @@ async function scrapeJobDetailsFromCurrentPageOrPopup(page, listing) {
       detailPage.waitForTimeout(5000),
     ]);
     await humanLikeScroll(detailPage);
-    await detailPage.waitForTimeout(randomInt(500, 1400));
+    await detailPage.waitForTimeout(randomInt(200, 500));
     return await extractVisibleJobDetails(detailPage);
   } catch (error) {
     log.warning('Failed to extract full job details from listing panel', {

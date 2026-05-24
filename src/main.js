@@ -59,8 +59,8 @@ const crawler = new PlaywrightCrawler({
   requestQueue,
   proxyConfiguration,
   maxRequestRetries: input.retryCount,
-  maxConcurrency: 3,
-  minConcurrency: 1,
+  maxConcurrency: 6,
+  minConcurrency: 3,
   useSessionPool: true,
   persistCookiesPerSession: true,
   sessionPoolOptions: {
