@@ -1,6 +1,4 @@
-FROM node:18-alpine
-
-WORKDIR /app
+FROM apify/actor-node-playwright-chrome:20
 
 # Copy package files
 COPY package*.json ./
