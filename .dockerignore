@@ -1,0 +1,9 @@
+node_modules/
+storage/
+.git
+.gitignore
+.env
+.DS_Store
+*.log
+.idea/
+.vscode/

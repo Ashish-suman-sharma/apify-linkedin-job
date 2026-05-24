@@ -1,0 +1,25 @@
+{
+  "name": "linkedin-jobs-full-scraper",
+  "version": "1.0.0",
+  "description": "Production-ready Apify Actor for scraping LinkedIn Jobs search result pages with Crawlee and Playwright.",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "lint": "node --check src/main.js && node --check src/routes.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6",
+    "crawlee": "^3.11.5",
+    "playwright": "^1.45.3"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "apify": {
+    "title": "LinkedIn Jobs Full Scraper",
+    "description": "Scrapes LinkedIn Jobs search URLs across all available pages up to maxResults.",
+    "inputSchema": "./input_schema.json"
+  }
+}

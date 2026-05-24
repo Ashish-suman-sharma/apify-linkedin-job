@@ -1,0 +1,88 @@
+{
+  "title": "LinkedIn Jobs Full Scraper",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "searchUrl": {
+      "title": "LinkedIn Jobs search URL",
+      "type": "string",
+      "description": "Paste a LinkedIn jobs URL after applying filters manually.",
+      "editor": "textfield",
+      "prefill": "https://www.linkedin.com/jobs/search/?keywords=frontend&location=London"
+    },
+    "maxResults": {
+      "title": "Maximum results",
+      "type": "integer",
+      "description": "Maximum number of jobs to scrape.",
+      "default": 100,
+      "minimum": 1,
+      "editor": "number"
+    },
+    "cookies": {
+      "title": "LinkedIn cookies",
+      "type": "array",
+      "description": "Optional LinkedIn cookies for authenticated scraping. Example: [{\"name\":\"li_at\",\"value\":\"xxx\"}]",
+      "default": [],
+      "editor": "json",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "proxyEnabled": {
+      "title": "Use Apify Proxy",
+      "type": "boolean",
+      "description": "Enable Apify Proxy rotation.",
+      "default": true,
+      "editor": "checkbox"
+    },
+    "retryCount": {
+      "title": "Retry count",
+      "type": "integer",
+      "description": "Number of retries for failed pages.",
+      "default": 3,
+      "minimum": 0,
+      "maximum": 10,
+      "editor": "number"
+    },
+    "requestDelayMin": {
+      "title": "Minimum request delay",
+      "type": "integer",
+      "description": "Minimum delay between requests in seconds.",
+      "default": 2,
+      "minimum": 0,
+      "maximum": 120,
+      "editor": "number"
+    },
+    "requestDelayMax": {
+      "title": "Maximum request delay",
+      "type": "integer",
+      "description": "Maximum delay between requests in seconds.",
+      "default": 5,
+      "minimum": 0,
+      "maximum": 120,
+      "editor": "number"
+    },
+    "headless": {
+      "title": "Headless browser",
+      "type": "boolean",
+      "description": "Run browser in headless mode.",
+      "default": true,
+      "editor": "checkbox"
+    }
+  },
+  "required": [
+    "searchUrl"
+  ]
+}

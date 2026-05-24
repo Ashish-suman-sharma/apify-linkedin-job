@@ -1,0 +1,16 @@
+{
+  "actorSpecVersion": 1,
+  "name": "linkedin-jobs-full-scraper",
+  "title": "LinkedIn Jobs Full Scraper",
+  "description": "Production-ready Apify Actor for scraping LinkedIn Jobs search result pages with Crawlee and Playwright.",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "env": {
+    "APIFY_HEADLESS": "1"
+  },
+  "dockerfile": "Dockerfile",
+  "categories": [
+    "SCRAPERS"
+  ],
+  "isPublic": false
+}
