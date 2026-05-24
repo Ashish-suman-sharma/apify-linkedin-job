@@ -41,11 +41,16 @@ const proxyConfiguration = input.proxyEnabled
   : undefined;
 
 const requestQueue = await Actor.openRequestQueue();
-await requestQueue.addRequest({
+
+const queueRequest = {
   url: input.searchUrl,
   uniqueKey: `page:${canonicalizeUrl(input.searchUrl)}`,
   userData: { label: 'LIST', pageNumber: 1 },
-});
+};
+
+log.info('Adding initial request to queue', { url: input.searchUrl });
+await requestQueue.addRequest(queueRequest);
+log.info('Request added to queue successfully');
 state.enqueuedPageUrls.add(canonicalizeUrl(input.searchUrl));
 
 const router = createRouter({ input, stats, state, requestQueue });
@@ -123,7 +128,12 @@ const crawler = new PlaywrightCrawler({
 });
 
 try {
-  await crawler.run();
+  log.info('Crawler about to run...');
+  const crawlerStats = await crawler.run();
+  log.info('Crawler finished running', crawlerStats);
+} catch (crawlerError) {
+  log.error('Crawler error', { error: crawlerError.message, stack: crawlerError.stack });
+  throw crawlerError;
 } finally {
   stats.executionTime = formatDuration(Date.now() - startedAt);
   await Actor.setValue('STATISTICS', stats);
